@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+
+    @*
+        スマートフォンやタブレットでも表示が崩れにくいように、
+        画面幅に合わせてレイアウトを調整するための設定。
+    *@
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    @* 各画面で設定したタイトルとアプリ名をブラウザのタイトルに表示する。 *@
+    <title>@ViewData["Title"] - 設備点検管理システム</title>
+
+    @* BootstrapのCSS。ボタンやナビゲーションなどの基本デザインに使用する。 *@
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    @* アプリ全体で使用する独自CSS。状態ラベルやダッシュボードの見た目を定義する。 *@
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    @*
+        ASP.NET CoreのCSS分離用ファイル。
+        個別Viewやコンポーネント用のCSSがある場合に反映される。
+    *@
+    <link rel="stylesheet" href="~/FacilityMaintenanceApp.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        @*
+            全画面共通のナビゲーションバー。
+            ダッシュボード、設備一覧、このアプリについてページへ移動できるようにする。
+        *@
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    設備点検管理システム
+                </a>
+
+                @*
+                    画面幅が狭い場合にメニューを開閉するためのボタン。
+                    data-bs-targetとcollapse側のidを対応させている。
+                *@
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navbarSupportedContent"
+                        aria-controls="navbarSupportedContent"
+                        aria-expanded="false"
+                        aria-label="メニューを開閉">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div id="navbarSupportedContent" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">
+                                ホーム
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Equipments" asp-action="Index">
+                                設備管理
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                このアプリについて
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    @*
+        各画面の内容を表示するメイン領域。
+        RenderBodyにより、IndexやCreateなど各Viewの内容がここに差し込まれる。
+    *@
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    @* 全画面共通のフッター。 *@
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - 設備点検管理システム -
+            <a asp-area="" asp-controller="Home" asp-action="Privacy">このアプリについて</a>
+        </div>
+    </footer>
+
+    @*
+        JavaScript関連の読み込み。
+        jQueryは入力チェック用のValidationScriptsPartialで使用されるため残している。
+    *@
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    @* BootstrapのJavaScript。ナビゲーションの開閉などに使用する。 *@
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+    @* アプリ独自のJavaScriptが必要になった場合に使用する。 *@
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    @*
+        各Viewで定義したScriptsセクションを読み込む。
+        登録・編集画面の入力チェック用スクリプトなどがここに差し込まれる。
+    *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

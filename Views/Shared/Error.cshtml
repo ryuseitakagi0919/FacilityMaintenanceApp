@@ -1,0 +1,30 @@
+﻿@model ErrorViewModel
+
+@{
+    ViewData["Title"] = "エラー";
+}
+
+@*
+    共通エラー画面。
+    予期しないエラーが発生した場合に、利用者へ分かりやすいメッセージを表示する。
+*@
+<h1 class="text-danger">エラーが発生しました</h1>
+
+<p>
+    処理中に問題が発生しました。時間をおいて再度お試しください。
+</p>
+
+@*
+    RequestIdが存在する場合のみ表示する。
+    開発時やログ確認時に、どのリクエストでエラーが発生したかを追跡しやすくするため。
+*@
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>リクエストID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+
+<p>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">ダッシュボードへ戻る</a>
+</p>

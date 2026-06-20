@@ -1,0 +1,198 @@
+@model FacilityMaintenanceApp.Models.Equipment
+
+@{
+    ViewData["Title"] = "設備詳細";
+}
+
+<h1>設備詳細</h1>
+
+@*
+    設備の基本情報を表示するエリア。
+    設備名、設置場所、状態、次回点検日などを確認できるようにする。
+*@
+<div>
+    <h4>設備情報</h4>
+    <hr />
+
+    @*
+        dlタグを1つにまとめ、項目名と値を対応させて表示する。
+        自動生成コードのままだとdlの構造が崩れやすいため、ここで整理している。
+    *@
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Location)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Location)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Category)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Category)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class="col-sm-10">
+            @*
+                設備状態は一覧画面と同じラベル表示にする。
+                画面ごとの表示ブレを減らし、状態を一目で判断できるようにするため。
+            *@
+            @if (Model.Status == "正常")
+            {
+                <span class="status-label status-normal">正常</span>
+            }
+            else if (Model.Status == "要対応")
+            {
+                <span class="status-label status-warning">要対応</span>
+            }
+            else if (Model.Status == "故障")
+            {
+                <span class="status-label status-danger">故障</span>
+            }
+            else if (Model.Status == "対応中")
+            {
+                <span class="status-label status-progress">対応中</span>
+            }
+            else
+            {
+                <span>@Model.Status</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.NextInspectionDate)
+        </dt>
+        <dd class="col-sm-10">
+            @*
+                次回点検日が未設定の場合も、空欄ではなく「未設定」と表示する。
+                利用者が情報の有無を判断しやすくするため。
+            *@
+            @if (Model.NextInspectionDate.HasValue)
+            {
+                @Model.NextInspectionDate.Value.ToString("yyyy/MM/dd")
+            }
+            else
+            {
+                <span class="text-muted">未設定</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Memo)
+        </dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrWhiteSpace(Model.Memo))
+            {
+                @Model.Memo
+            }
+            else
+            {
+                <span class="text-muted">なし</span>
+            }
+        </dd>
+    </dl>
+</div>
+
+<hr />
+
+<h2>点検履歴</h2>
+
+<p>
+    @*
+        表示中の設備に対して、新しい点検履歴を登録する。
+        equipmentIdを渡すことで、どの設備の点検履歴かをController側で判別する。
+    *@
+    <a asp-action="CreateInspection" asp-route-equipmentId="@Model.Id" class="btn btn-primary">
+        点検履歴を登録
+    </a>
+</p>
+
+@*
+    設備に紐づく点検履歴を表示する。
+    Controller側でIncludeを使って取得し、点検日の新しい順に並べている。
+*@
+@if (Model.Inspections != null && Model.Inspections.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>点検日</th>
+                <th>点検結果</th>
+                <th>点検者</th>
+                <th>コメント</th>
+                <th>次回点検予定日</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var inspection in Model.Inspections)
+            {
+                <tr>
+                    <td>@inspection.InspectionDate.ToString("yyyy/MM/dd")</td>
+                    <td>
+                        @*
+                            点検結果もラベル表示にし、
+                            異常なし・要対応・故障を視覚的に判断しやすくする。
+                        *@
+                        @if (inspection.Result == "異常なし")
+                        {
+                            <span class="status-label status-normal">異常なし</span>
+                        }
+                        else if (inspection.Result == "要対応")
+                        {
+                            <span class="status-label status-warning">要対応</span>
+                        }
+                        else if (inspection.Result == "故障")
+                        {
+                            <span class="status-label status-danger">故障</span>
+                        }
+                        else
+                        {
+                            <span>@inspection.Result</span>
+                        }
+                    </td>
+                    <td>@inspection.Inspector</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(inspection.Comment))
+                        {
+                            @inspection.Comment
+                        }
+                        else
+                        {
+                            <span class="text-muted">なし</span>
+                        }
+                    </td>
+                    <td>
+                        @if (inspection.NextInspectionDate.HasValue)
+                        {
+                            @inspection.NextInspectionDate.Value.ToString("yyyy/MM/dd")
+                        }
+                        else
+                        {
+                            <span class="text-muted">未設定</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-muted">点検履歴はまだ登録されていません。</p>
+}
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">編集</a>
+    <a asp-action="Index" class="btn btn-secondary">一覧へ戻る</a>
+</div>

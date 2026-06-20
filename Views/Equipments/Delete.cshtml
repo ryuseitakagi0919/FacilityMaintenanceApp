@@ -1,0 +1,119 @@
+@model FacilityMaintenanceApp.Models.Equipment
+
+@{
+    ViewData["Title"] = "設備削除";
+}
+
+<h1>設備削除</h1>
+
+@*
+    削除操作は元に戻せないため、確認画面を表示する。
+    誤操作を防ぐため、対象設備の情報を確認してから削除できるようにしている。
+*@
+<div class="alert alert-danger" role="alert">
+    以下の設備情報を削除します。内容を確認してください。
+</div>
+
+<div>
+    <h4>削除対象設備</h4>
+    <hr />
+
+    @*
+        削除対象の設備情報を一覧表示する。
+        dlタグを1つにまとめ、画面構造をシンプルにしている。
+    *@
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Location)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Location)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Category)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Category)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class="col-sm-10">
+            @*
+                状態は一覧画面と同じラベル表示にし、
+                削除対象の状態が分かりやすいようにする。
+            *@
+            @if (Model.Status == "正常")
+            {
+                <span class="status-label status-normal">正常</span>
+            }
+            else if (Model.Status == "要対応")
+            {
+                <span class="status-label status-warning">要対応</span>
+            }
+            else if (Model.Status == "故障")
+            {
+                <span class="status-label status-danger">故障</span>
+            }
+            else if (Model.Status == "対応中")
+            {
+                <span class="status-label status-progress">対応中</span>
+            }
+            else
+            {
+                <span>@Model.Status</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.NextInspectionDate)
+        </dt>
+        <dd class="col-sm-10">
+            @if (Model.NextInspectionDate.HasValue)
+            {
+                @Model.NextInspectionDate.Value.ToString("yyyy/MM/dd")
+            }
+            else
+            {
+                <span class="text-muted">未設定</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Memo)
+        </dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrWhiteSpace(Model.Memo))
+            {
+                @Model.Memo
+            }
+            else
+            {
+                <span class="text-muted">なし</span>
+            }
+        </dd>
+    </dl>
+
+    @*
+    削除確定用フォーム。
+    送信前にJavaScriptの確認ダイアログを表示し、誤操作による削除を防ぐ。
+    *@
+    <form asp-action="Delete"
+          method="post"
+          onsubmit="return confirm('本当にこの設備を削除しますか？');">
+        <input type="hidden" asp-for="Id" />
+
+        <input type="submit" value="削除する" class="btn btn-danger" />
+        <a asp-action="Index" class="btn btn-secondary">一覧へ戻る</a>
+    </form>
+
+</div>

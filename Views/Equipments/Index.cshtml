@@ -1,0 +1,184 @@
+@model IEnumerable<FacilityMaintenanceApp.Models.Equipment>
+
+@{
+    ViewData["Title"] = "設備一覧";
+}
+
+<h1>設備一覧</h1>
+
+<p class="text-muted">
+    登録されている設備情報を確認できます。設備名・状態・点検期限で絞り込みできます。
+</p>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">新規登録</a>
+</p>
+
+@*
+    設備一覧の検索フォーム。
+    入力された条件はEquipmentsControllerのIndexアクションにGETで送信される。
+    Controller側でLINQを使ってSQL Serverから条件に合う設備を取得する。
+*@
+<form asp-action="Index" method="get" class="search-area mb-4">
+    <div class="row g-2">
+        <div class="col-md-4">
+            <input type="text"
+                   name="keyword"
+                   value="@ViewData["CurrentKeyword"]"
+                   class="form-control"
+                   placeholder="設備名・設置場所・設備種別で検索" />
+        </div>
+
+        @*
+            設備状態による絞り込み。
+            状態は「正常」「要対応」「故障」「対応中」から選択する。
+        *@
+        <div class="col-md-3">
+            <select name="status" class="form-control">
+                <option value="">状態をすべて表示</option>
+                <option value="正常" selected="@(ViewData["CurrentStatus"]?.ToString() == "正常")">正常</option>
+                <option value="要対応" selected="@(ViewData["CurrentStatus"]?.ToString() == "要対応")">要対応</option>
+                <option value="故障" selected="@(ViewData["CurrentStatus"]?.ToString() == "故障")">故障</option>
+                <option value="対応中" selected="@(ViewData["CurrentStatus"]?.ToString() == "対応中")">対応中</option>
+            </select>
+        </div>
+
+        @*
+            点検期限による絞り込み。
+            期限超過設備や7日以内に点検予定の設備をすぐ確認できるようにする。
+        *@
+        <div class="col-md-3">
+            <select name="inspectionFilter" class="form-control">
+                <option value="">点検期限をすべて表示</option>
+                <option value="overdue" selected="@(ViewData["CurrentInspectionFilter"]?.ToString() == "overdue")">期限超過のみ</option>
+                <option value="soon" selected="@(ViewData["CurrentInspectionFilter"]?.ToString() == "soon")">7日以内の点検のみ</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">検索</button>
+        </div>
+    </div>
+
+    <div class="mt-2">
+        <a asp-action="Index">条件をクリア</a>
+    </div>
+</form>
+
+@*
+    設備一覧テーブル。
+    状態や点検期限を色分けし、対応が必要な設備を見つけやすくする。
+*@
+@if (Model.Any())
+{
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.Name)</th>
+                <th>@Html.DisplayNameFor(model => model.Location)</th>
+                <th>@Html.DisplayNameFor(model => model.Category)</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
+                <th>@Html.DisplayNameFor(model => model.NextInspectionDate)</th>
+                <th>@Html.DisplayNameFor(model => model.Memo)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Location</td>
+                    <td>@item.Category</td>
+
+                    <td>
+                        @*
+                            設備状態をラベル表示にする。
+                            文字だけでなく色でも状態を判断できるようにしている。
+                        *@
+                        @if (item.Status == "正常")
+                        {
+                            <span class="status-label status-normal">正常</span>
+                        }
+                        else if (item.Status == "要対応")
+                        {
+                            <span class="status-label status-warning">要対応</span>
+                        }
+                        else if (item.Status == "故障")
+                        {
+                            <span class="status-label status-danger">故障</span>
+                        }
+                        else if (item.Status == "対応中")
+                        {
+                            <span class="status-label status-progress">対応中</span>
+                        }
+                        else
+                        {
+                            <span class="status-label">@item.Status</span>
+                        }
+                    </td>
+
+                    <td>
+                        @*
+                            次回点検日を表示する。
+                            期限超過や7日以内の点検予定はラベルで強調する。
+                        *@
+                        @if (item.NextInspectionDate.HasValue)
+                        {
+                            var today = DateTime.Today;
+                            var inspectionDate = item.NextInspectionDate.Value.Date;
+
+                            if (inspectionDate < today)
+                            {
+                                <div class="inspection-cell">
+                                    <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                    <span class="inspection-badge inspection-overdue">期限超過</span>
+                                </div>
+                            }
+                            else if (inspectionDate <= today.AddDays(7))
+                            {
+                                <div class="inspection-cell">
+                                    <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                    <span class="inspection-badge inspection-soon">まもなく</span>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="inspection-cell">
+                                    <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">未設定</span>
+                        }
+                    </td>
+
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(item.Memo))
+                        {
+                            @item.Memo
+                        }
+                        else
+                        {
+                            <span class="text-muted">なし</span>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.Id">編集</a> |
+                        <a asp-action="Details" asp-route-id="@item.Id">詳細</a> |
+                        <a asp-action="Delete" asp-route-id="@item.Id">削除</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-muted">
+        条件に一致する設備はありません。
+    </p>
+}

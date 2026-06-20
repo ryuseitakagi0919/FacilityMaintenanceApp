@@ -1,0 +1,176 @@
+﻿@model FacilityMaintenanceApp.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "ダッシュボード";
+}
+
+@*
+    ダッシュボード画面。
+    設備の状態別件数や点検期限を集計し、対応が必要な設備をすぐ把握できるようにする。
+*@
+<div class="dashboard-header">
+    <h1>ダッシュボード</h1>
+    <p>設備の状態や点検予定を確認できます。</p>
+</div>
+
+@*
+    設備状況の集計カード。
+    登録設備数と状態別件数を表示し、現在の設備全体の状況を把握できるようにする。
+*@
+<div class="dashboard-section">
+    <h2>設備状況</h2>
+
+    <div class="dashboard-cards">
+        <div class="dashboard-card total">
+            <div class="card-title">登録設備数</div>
+            <div class="card-number">@Model.TotalCount</div>
+        </div>
+
+        <div class="dashboard-card normal">
+            <div class="card-title">正常</div>
+            <div class="card-number">@Model.NormalCount</div>
+        </div>
+
+        <div class="dashboard-card warning">
+            <div class="card-title">要対応</div>
+            <div class="card-number">@Model.WarningCount</div>
+        </div>
+
+        <div class="dashboard-card danger">
+            <div class="card-title">故障</div>
+            <div class="card-number">@Model.FailureCount</div>
+        </div>
+
+        <div class="dashboard-card in-progress">
+            <div class="card-title">対応中</div>
+            <div class="card-number">@Model.InProgressCount</div>
+        </div>
+    </div>
+</div>
+
+@*
+    点検期限の集計カード。
+    期限超過や7日以内の点検予定を分けて表示し、優先的に確認すべき設備を把握できるようにする。
+*@
+<div class="dashboard-section">
+    <h2>点検期限</h2>
+
+    <div class="dashboard-cards inspection-cards">
+        <div class="dashboard-card overdue">
+            <div class="card-title">期限超過</div>
+            <div class="card-number">@Model.OverdueCount</div>
+        </div>
+
+        <div class="dashboard-card soon">
+            <div class="card-title">7日以内の点検</div>
+            <div class="card-number">@Model.DueSoonCount</div>
+        </div>
+    </div>
+</div>
+
+@*
+    注意が必要な設備一覧。
+    「要対応」「故障」「期限超過」「7日以内の点検予定」に該当する設備を表示する。
+    一覧画面へ移動しなくても、優先的に確認すべき設備を把握できるようにする。
+*@
+<div class="mt-4">
+    <h2>注意が必要な設備</h2>
+
+    @if (Model.AttentionEquipments.Any())
+    {
+        <table class="table table-bordered align-middle">
+            <thead>
+                <tr>
+                    <th>設備名</th>
+                    <th>設置場所</th>
+                    <th>設備種別</th>
+                    <th>状態</th>
+                    <th>次回点検日</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.AttentionEquipments)
+                {
+                    <tr>
+                        <td>@item.Name</td>
+                        <td>@item.Location</td>
+                        <td>@item.Category</td>
+                        <td>
+                            @*
+                                設備状態をラベル表示にし、対応が必要な設備を視覚的に判断しやすくする。
+                            *@
+                            @if (item.Status == "正常")
+                            {
+                                <span class="status-label status-normal">正常</span>
+                            }
+                            else if (item.Status == "要対応")
+                            {
+                                <span class="status-label status-warning">要対応</span>
+                            }
+                            else if (item.Status == "故障")
+                            {
+                                <span class="status-label status-danger">故障</span>
+                            }
+                            else if (item.Status == "対応中")
+                            {
+                                <span class="status-label status-progress">対応中</span>
+                            }
+                            else
+                            {
+                                <span class="status-label">@item.Status</span>
+                            }
+                        </td>
+                        <td>
+                            @*
+                                次回点検日を表示する。
+                                期限超過・7日以内の場合はラベルで強調し、優先度が分かるようにする。
+                            *@
+                            @if (item.NextInspectionDate.HasValue)
+                            {
+                                var today = DateTime.Today;
+                                var inspectionDate = item.NextInspectionDate.Value.Date;
+
+                                if (inspectionDate < today)
+                                {
+                                    <div class="inspection-cell">
+                                        <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                        <span class="inspection-badge inspection-overdue">期限超過</span>
+                                    </div>
+                                }
+                                else if (inspectionDate <= today.AddDays(7))
+                                {
+                                    <div class="inspection-cell">
+                                        <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                        <span class="inspection-badge inspection-soon">まもなく</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="inspection-cell">
+                                        <span class="inspection-date">@inspectionDate.ToString("yyyy/MM/dd")</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">未設定</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-controller="Equipments" asp-action="Details" asp-route-id="@item.Id">詳細</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">現在、注意が必要な設備はありません。</p>
+    }
+</div>
+
+<div class="mt-4">
+    <a asp-controller="Equipments" asp-action="Index" class="btn btn-primary">設備一覧を見る</a>
+</div>

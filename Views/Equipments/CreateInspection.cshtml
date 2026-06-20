@@ -1,0 +1,90 @@
+﻿@model FacilityMaintenanceApp.Models.Inspection
+
+@{
+    ViewData["Title"] = "点検履歴登録";
+}
+
+<h1>点検履歴登録</h1>
+
+<p class="text-muted">
+    対象設備：@ViewData["EquipmentName"]
+</p>
+
+<div class="row">
+    <div class="col-md-6">
+        @*
+            設備に紐づく点検履歴を登録するフォーム。
+            登録後は、EquipmentsControllerのCreateInspectionアクションで
+            点検履歴の保存と設備状態の更新を行う。
+        *@
+        <form asp-action="CreateInspection" method="post">
+            @* Model全体に関する入力エラーを表示する。 *@
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            @*
+                点検対象の設備ID。
+                画面には表示しないが、どの設備の点検履歴かをControllerへ渡すために必要。
+            *@
+            <input type="hidden" asp-for="EquipmentId" />
+
+            @* 点検を実施した日付。点検履歴として必須の情報。 *@
+            <div class="form-group mb-3">
+                <label asp-for="InspectionDate" class="control-label"></label>
+                <input asp-for="InspectionDate" class="form-control" type="date" />
+                <span asp-validation-for="InspectionDate" class="text-danger"></span>
+            </div>
+
+            @*
+                点検結果。
+                結果に応じて、設備側の現在状態も更新される。
+                表記ゆれを防ぐため、自由入力ではなくプルダウンにしている。
+            *@
+            <div class="form-group mb-3">
+                <label asp-for="Result" class="control-label"></label>
+                <select asp-for="Result" class="form-control">
+                    <option value="異常なし">異常なし</option>
+                    <option value="要対応">要対応</option>
+                    <option value="故障">故障</option>
+                </select>
+                <span asp-validation-for="Result" class="text-danger"></span>
+            </div>
+
+            @* 点検を実施した担当者名。誰が点検したかを履歴として残す。 *@
+            <div class="form-group mb-3">
+                <label asp-for="Inspector" class="control-label"></label>
+                <input asp-for="Inspector" class="form-control" placeholder="例：高木" />
+                <span asp-validation-for="Inspector" class="text-danger"></span>
+            </div>
+
+            @* 点検時の補足コメント。異常内容や対応状況を記録するために使用する。 *@
+            <div class="form-group mb-3">
+                <label asp-for="Comment" class="control-label"></label>
+                <textarea asp-for="Comment" class="form-control" rows="3" placeholder="例：フィルター汚れあり。次回清掃予定。"></textarea>
+                <span asp-validation-for="Comment" class="text-danger"></span>
+            </div>
+
+            @*
+                次回点検予定日。
+                入力された場合は設備情報側にも反映され、
+                一覧画面やダッシュボードの点検期限判定に使用される。
+            *@
+            <div class="form-group mb-3">
+                <label asp-for="NextInspectionDate" class="control-label"></label>
+                <input asp-for="NextInspectionDate" class="form-control" type="date" />
+                <span asp-validation-for="NextInspectionDate" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="登録" class="btn btn-primary" />
+                <a asp-action="Details" asp-route-id="@Model.EquipmentId" class="btn btn-secondary">設備詳細へ戻る</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@* クライアント側の入力チェックを有効にする。 *@
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
