@@ -62,7 +62,20 @@
 
     <div class="mt-2">
         <a asp-action="Index">条件をクリア</a>
+
+        @*
+        現在の検索条件を引き継いだ状態でCSV出力を行う。
+        検索結果として表示されている設備だけをCSVに出力できるようにする。
+        *@
+        <a asp-action="ExportCsv"
+           asp-route-keyword="@ViewData["CurrentKeyword"]"
+           asp-route-status="@ViewData["CurrentStatus"]"
+           asp-route-inspectionFilter="@ViewData["CurrentInspectionFilter"]"
+           class="btn btn-success btn-sm ms-2">
+            CSV出力
+        </a>
     </div>
+
 </form>
 
 @*

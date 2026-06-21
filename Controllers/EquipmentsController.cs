@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FacilityMaintenanceApp.Models;
@@ -70,6 +71,96 @@ public class EquipmentsController : Controller
             .OrderBy(e => e.NextInspectionDate)
             .ToListAsync());
     }
+
+
+    // 設備一覧をCSV形式で出力する。
+    // 一覧画面の検索条件を受け取り、条件に一致する設備のみを出力対象
+    public async Task<IActionResult> ExportCsv(string? keyword, string? status, string? inspectionFilter)
+    {
+        var equipments = _context.Equipments.AsQueryable();
+
+        // キーワードが入力されている場合は、設備名・設置場所・設備種別を対象に検索
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            equipments = equipments.Where(equipment =>
+                equipment.Name.Contains(keyword) ||
+                equipment.Location.Contains(keyword) ||
+                equipment.Category.Contains(keyword));
+        }
+
+        // 状態が選択されている場合は、指定された状態の設備だけに絞り込む。
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            equipments = equipments.Where(equipment => equipment.Status == status);
+        }
+
+        // 点検期限による絞り込み。
+        // 期限超過、または7日以内に点検予定がある設備だけを出力
+        var today = DateTime.Today;
+
+        if (inspectionFilter == "overdue")
+        {
+            equipments = equipments.Where(equipment =>
+                equipment.NextInspectionDate.HasValue &&
+                equipment.NextInspectionDate.Value.Date < today);
+        }
+        else if (inspectionFilter == "soon")
+        {
+            var soon = today.AddDays(7);
+
+            equipments = equipments.Where(equipment =>
+                equipment.NextInspectionDate.HasValue &&
+                equipment.NextInspectionDate.Value.Date >= today &&
+                equipment.NextInspectionDate.Value.Date <= soon);
+        }
+
+        var equipmentList = await equipments
+            .OrderBy(equipment => equipment.NextInspectionDate)
+            .ToListAsync();
+
+        var csv = new StringBuilder();
+
+        // CSVのヘッダー行。
+        csv.AppendLine("設備名,設置場所,設備種別,状態,次回点検日,メモ");
+
+        foreach (var equipment in equipmentList)
+        {
+            var values = new[]
+            {
+            equipment.Name,
+            equipment.Location,
+            equipment.Category,
+            equipment.Status,
+            equipment.NextInspectionDate?.ToString("yyyy/MM/dd") ?? "",
+            equipment.Memo ?? ""
+        };
+
+            // カンマや改行を含む文字列でもCSVが崩れないように変換
+            csv.AppendLine(string.Join(",", values.Select(EscapeCsv)));
+        }
+
+        // Excelで開いたときに日本語が文字化けしにくいよう、UTF-8 BOM付きで出力
+        var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+        var bytes = encoding.GetPreamble()
+            .Concat(encoding.GetBytes(csv.ToString()))
+            .ToArray();
+
+        var fileName = $"equipments_{DateTime.Now:yyyyMMddHHmmss}.csv";
+
+        return File(bytes, "text/csv; charset=utf-8", fileName);
+    }
+
+    // CSV用に文字列を整形する。
+    private static string EscapeCsv(string value)
+    {
+        if (value.Contains(",") || value.Contains("\"") || value.Contains("\r") || value.Contains("\n"))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+
+        return value;
+    }
+
 
     // GET: Equipments/Details/5
     // 設備の詳細情報を表示する。
