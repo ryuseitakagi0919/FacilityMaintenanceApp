@@ -2,7 +2,7 @@
 
 > **施設管理の現場を想定した、設備情報・点検履歴・点検期限を管理するWebアプリケーションです。**
 
-<!-- ![デモ画面](docs/images/dashboard.png) -->
+![デモ画面](docs/images/dashboard.png)
 
 ## 概要
 
@@ -176,11 +176,11 @@ https://localhost:xxxx
 
 | 画面      | スクリーンショット                           |
 | :------ | :---------------------------------- |
-| ダッシュボード | `docs/images/dashboard.png`         |
-| 設備一覧    | `docs/images/equipment-list.png`    |
-| 設備詳細    | `docs/images/equipment-details.png` |
-| 点検履歴登録  | `docs/images/inspection-create.png` |
-| CSV出力   | `docs/images/csv-export.png`        |
+| ダッシュボード | ![ダッシュボード](docs/images/dashboard.png)         |
+| 設備一覧    | ![設備一覧](docs/images/equipment-list.png)    |
+| 設備詳細    | ![設備詳細](docs/images/equipment-details.png) |
+| 点検履歴登録  | ![点検履歴登録](docs/images/inspection-create.png) |
+| CSV出力   | ![CSV出力](docs/images/csv-export.png)        |
 
 ## 今後追加したい機能
 
